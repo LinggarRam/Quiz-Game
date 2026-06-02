@@ -146,7 +146,7 @@ function renderHome() {
         const total = cat[state.difficulty].length;
 
         const card = document.createElement("div");
-        card.className = "category-card" + (state.category === key ? "selected" : "");
+        card.className = "category-card" + (state.category === key ? " selected" : "");
         card.innerHTML = `
             <span class="cat-icon">${cat.icon}</span>
             <span class="cat-name">${cat.name}</span>

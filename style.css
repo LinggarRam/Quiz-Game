@@ -34,34 +34,10 @@ body {
     overflow-x: hidden;
 }
 
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-image: 
-        linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px)
-    ;
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-}
-
-body::after {
-    content: "";
-    position: fixed;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%);
-    top: -100px;
-    right: -100px;
-    pointer-events: none;
-    z-index: 0;
-}
-
 .container {
     width: 100%;
-    /* max-width: 680px; */
+    max-width: 680px;
+    margin: 0 auto;
     position: relative;
     z-index: 1;
 }
@@ -780,8 +756,8 @@ body::after {
 
 /* FOOTER */
 .site-footer {
-    margin-top: 2rem;
-    padding: 2rem 0 1rem;
+    margin-top: 3rem;
+    padding: 2.5rem 1rem 1.5rem;
     border-top: 1px solid var(--border);
     text-align: center;
 }
@@ -822,8 +798,11 @@ body::after {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 1.5rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .social-link {
@@ -901,5 +880,16 @@ body::after {
     }
     .stats-grid { 
         grid-template-columns: repeat(3, 1fr); 
+    }
+    .social-links {
+        gap: 6px;
+    }
+    .social-link {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+    }
+    .social-link svg {
+        width: 13px;
+        height: 13px;
     }
 }
