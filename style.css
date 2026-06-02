@@ -427,6 +427,100 @@ body::after {
     margin-bottom: 1.5rem;
 }
 
+.option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+.option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(124,106,247,0.1);
+    transform: translateY(-1px);
+}
+    
+.option-btn:disabled { 
+    cursor: not-allowed; 
+}
+
+.option-letter {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 6px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all 0.18s;
+}
+
+.option-btn:hover:not(:disabled) .option-letter {
+    background: var(--accent);
+    color: #fff;
+}
+
+.option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(77,255,176,0.1);
+    animation: pulse-correct 0.4s ease;
+}
+
+.option-btn.correct .option-letter { 
+    background: var(--correct); 
+    color: #0a0a0f; 
+}
+
+.option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(255,95,126,0.1);
+    animation: shake 0.3s ease;
+}
+
+.option-btn.wrong .option-letter { 
+    background: var(--wrong); 
+    color: #fff; 
+}
+
+@keyframes pulse-correct {
+    0% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.02); 
+    }
+    100% { 
+        transform: scale(1); 
+    }
+}
+    
+@keyframes shake {
+    0%,100% { 
+        transform: translateX(0); 
+    }
+    25% { 
+        transform: translateX(-6px); 
+    }
+    75% { 
+        transform: translateX(6px); 
+    }
+}
+
 .feedback-bar {
     padding: 0.85rem 1.25rem;
     border-radius: 12px;
