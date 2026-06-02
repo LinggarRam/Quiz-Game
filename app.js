@@ -189,36 +189,148 @@ function startQuiz() {
     loadQuestion();
 }
 
-// function loadQuestion() {
-//     const q = state.questions[state.currentIdx];
-//     const total = state.questions.length;
+function loadQuestion() {
+    const q = state.questions[state.currentIdx];
+    const total = state.questions.length;
 
-//     document.getElementById("q-count").textContent = `${state.currentIdx + 1} / ${total}`;
-//     document.getElementById("progress-bar").style.width = `${(state.currentIdx / total) * 100}% `;
-//     document.getElementById("live-score").textContent = state.score;
-//     document.getElementById("q-cat-tag").textContent = QUESTIONS[state.category].name;
-//     document.getElementById("question-text").textContent = q.q;
+    document.getElementById("q-count").textContent = `${state.currentIdx + 1} / ${total}`;
+    document.getElementById("progress-bar").style.width = `${(state.currentIdx / total) * 100}% `;
+    document.getElementById("live-score").textContent = state.score;
+    document.getElementById("q-cat-tag").textContent = QUESTIONS[state.category].name;
+    document.getElementById("question-text").textContent = q.q;
 
-//     const grid = document.getElementById('options-grid');
-//     grid.innerHTML = '';
-//     const letters = ['A','B','C','D'];
+    // OPTIONS
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    const letters = ['A','B','C','D'];
     
-//     // Shuffle option indices
-//     const optIndices = shuffle([0,1,2,3]);
-//     state._optOrder = optIndices; // store for correct answer check
-//     state._correctMapped = optIndices.indexOf(q.ans);
+    // Shuffle option indices
+    const optIndices = shuffle([0,1,2,3]);
+    state._optOrder = optIndices; // store for correct answer check
+    state._correctMapped = optIndices.indexOf(q.ans);
 
-//     optIndices.forEach((origIdx, displayPos) => {
-//         const btn = document.createElement('button');
-//         btn.className = 'option-btn';
-//         btn.innerHTML = `<span class="option-letter">${letters[displayPos]}</span>${q.opts[origIdx]}`;
-//         btn.addEventListener('click', () => handleAnswer(displayPos, btn));
-//         grid.appendChild(btn);
-//     });
-// }
+    optIndices.forEach((origIdx, displayPos) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[displayPos]}</span>${q.opts[origIdx]}`;
+        btn.addEventListener('click', () => handleAnswer(displayPos, btn));
+        grid.appendChild(btn);
+    });
 
+    // FEEDBACK
+    const fb = document.getElementById("feedback-bar");
+    fb.className = "feedback-bar";
+    document.getElementById("next-btn").className = "next-btn";
+    state.answered = false;
+
+    // TIMER
+    clearInterval(state.timerInterval);
+    state.timeLeft = TIMER_MAX;
+    updateTimer(state.timeLeft);
+    state.timerInterval = setInterval(() => {
+        state.timeLeft--;
+        updateTimer(state.timeLeft);
+        if(state.timeLeft <= 0) {
+            clearInterval(state.timerInterval);
+            handleTimeout();
+        }
+    }, 1000);
+}
+
+function updateTimer(t) {
+    const pct = t / TIMER_MAX;
+    const offset = CIRCUMFERENCE * (1 - pct);
+    const ring = document.getElementById("ring-fg");
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = t > 10 ? "var(--accent3)" : t > 5 ? "var(--accent2)" : 'var(--wrong)';
+    document.getElementById("timer-num").textContent = t;
+    document.getElementById("timer-num").style.color = t > 10 ? 'var(--accent3)' : t > 5 ? 'var(--accent2)' : 'var(--wrong)';
+}
+
+function handleTimeout() {
+    if(state.answered) return;
+    state.answered = true;
+
+    const q = state.questions[state.currentIdx];
+    state.timeTaken.push(TIMER_MAX);
+    state.answers.push({q: q.q, opts: q.opts, correct: q.ans, chosen: -1, isCorrect: false, points: 0});
+
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === state._correctMapped) b.classList.add('correct');
+    });
+
+    const fb = document.getElementById('feedback-bar');
+    fb.className = 'feedback-bar show wrong';
+
+    document.getElementById('feedback-icon').textContent = '⏰';
+    document.getElementById('feedback-text').textContent = `Waktu habis! Jawaban: ${q.opts[q.ans]}`;
+    document.getElementById('next-btn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+    state.currentIdx++;
+    if (state.currentIdx < state.questions.length) {
+        loadQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function handleAnswer(displayPos, clickedBtn) {
+    if (state.answered) return;
+    state.answered = true;
+    clearInterval(state.timerInterval);
+
+    const timeTaken = TIMER_MAX - state.timeLeft;
+    state.timeTaken.push(timeTaken);
+
+    const isCorrect = displayPos === state._correctMapped;
+    const q = state.questions[state.currentIdx];
+
+    // Mark buttons
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === state._correctMapped) b.classList.add('correct');
+    });
+    if (!isCorrect) clickedBtn.classList.add('wrong');
+
+    // Score
+    let points = 0;
+    if (isCorrect) {
+        points = Math.max(50, 100 - timeTaken * 3);
+        if (state.difficulty === 'medium') points = Math.round(points * 1.5);
+        if (state.difficulty === 'hard') points = points * 2;
+        state.score += points;
+        document.getElementById('live-score').textContent = state.score;
+    }
+
+    // Save answer
+    state.answers.push({
+        q: q.q,
+        opts: q.opts,
+        correct: q.ans,
+        chosen: state._optOrder[displayPos],
+        isCorrect,
+        points
+    });
+
+    // Feedback
+    const fb = document.getElementById('feedback-bar');
+    fb.className = 'feedback-bar show ' + (isCorrect ? 'correct' : 'wrong');
+    document.getElementById('feedback-icon').textContent = isCorrect ? '✅' : '❌';
+    document.getElementById('feedback-text').textContent = isCorrect
+        ? `Benar! +${points} poin (${timeTaken}s)`
+        : `Salah. Jawaban: ${q.opts[q.ans]}`;
+
+    document.getElementById('next-btn').className = 'next-btn show';
+}
 
 document.getElementById("start-btn").addEventListener("click", startQuiz);
+
+document.getElementById('next-btn').addEventListener('click', nextQuestion);
 
 document.querySelectorAll(".diff-btn").forEach(btn => {
     btn.addEventListener("click", () => {
