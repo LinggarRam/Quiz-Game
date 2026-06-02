@@ -97,7 +97,7 @@ body::after {
     font-weight: 800;
     font-size: clamp(2.5rem, 8vw, 4.5rem);
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #7c6af7 0%, #f7c56a 100%);
+    background: #f7c56a;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -309,7 +309,7 @@ body::after {
 /* FOOTER */
 .site-footer {
     margin-top: 2rem;
-    padding: 2rem 0 1.5rem;
+    padding: 2rem 0 1rem;
     border-top: 1px solid var(--border);
     text-align: center;
 }
@@ -318,7 +318,7 @@ body::after {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #f7c56a);
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -326,7 +326,7 @@ body::after {
     font-family: "Syne", sans-serif;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #fff;
+    color: #000;
     letter-spacing: -0.02em;
 }
 

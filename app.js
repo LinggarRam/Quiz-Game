@@ -122,7 +122,7 @@ function shuffle(arr) {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function showScreenId(id) {
+function showScreen(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
 }
@@ -172,5 +172,62 @@ function renderHighscores() {
         </div>`
     ).join("");
 }
+
+function updateStartBtn() {
+    document.getElementById("start-btn").disabled = !state.category;
+}
+
+function startQuiz() {
+    const raw = QUESTIONS[state.category][state.difficulty];
+    state.questions = shuffle(raw).slice(0, Math.min(5, raw.length));
+    state.currentIdx = 0;
+    state.score = 0;
+    state.answers = [];
+    state.timeTaken = [];
+    state.totalTime = 0;
+    showScreen("screen-quiz");
+    loadQuestion();
+}
+
+// function loadQuestion() {
+//     const q = state.questions[state.currentIdx];
+//     const total = state.questions.length;
+
+//     document.getElementById("q-count").textContent = `${state.currentIdx + 1} / ${total}`;
+//     document.getElementById("progress-bar").style.width = `${(state.currentIdx / total) * 100}% `;
+//     document.getElementById("live-score").textContent = state.score;
+//     document.getElementById("q-cat-tag").textContent = QUESTIONS[state.category].name;
+//     document.getElementById("question-text").textContent = q.q;
+
+//     const grid = document.getElementById('options-grid');
+//     grid.innerHTML = '';
+//     const letters = ['A','B','C','D'];
+    
+//     // Shuffle option indices
+//     const optIndices = shuffle([0,1,2,3]);
+//     state._optOrder = optIndices; // store for correct answer check
+//     state._correctMapped = optIndices.indexOf(q.ans);
+
+//     optIndices.forEach((origIdx, displayPos) => {
+//         const btn = document.createElement('button');
+//         btn.className = 'option-btn';
+//         btn.innerHTML = `<span class="option-letter">${letters[displayPos]}</span>${q.opts[origIdx]}`;
+//         btn.addEventListener('click', () => handleAnswer(displayPos, btn));
+//         grid.appendChild(btn);
+//     });
+// }
+
+
+document.getElementById("start-btn").addEventListener("click", startQuiz);
+
+document.querySelectorAll(".diff-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        state.difficulty = btn.dataset.diff;
+        state.category = null;
+        renderHome();
+    });
+});
 
 renderHome();
