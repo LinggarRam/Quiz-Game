@@ -131,6 +131,13 @@ function getHighscores() {
     return JSON.parse(localStorage.getItem("quizmaster_scores") || "[]");
 }
 
+function saveHighscore(name, score, cat, diff) {
+    const hs = getHighscores();
+    hs.push({ name, score, cat, diff, date: new Date().toLocaleDateString('id-ID') });
+    hs.sort((a,b) => b.score - a.score);
+    localStorage.setItem('quizmaster_scores', JSON.stringify(hs.slice(0, 5)));
+}
+
 function renderHome() {
     const grid = document.getElementById("category-grid");
 
@@ -247,37 +254,6 @@ function updateTimer(t) {
     document.getElementById("timer-num").style.color = t > 10 ? 'var(--accent3)' : t > 5 ? 'var(--accent2)' : 'var(--wrong)';
 }
 
-function handleTimeout() {
-    if(state.answered) return;
-    state.answered = true;
-
-    const q = state.questions[state.currentIdx];
-    state.timeTaken.push(TIMER_MAX);
-    state.answers.push({q: q.q, opts: q.opts, correct: q.ans, chosen: -1, isCorrect: false, points: 0});
-
-    const buttons = document.querySelectorAll('.option-btn');
-    buttons.forEach((b, i) => {
-        b.disabled = true;
-        if (i === state._correctMapped) b.classList.add('correct');
-    });
-
-    const fb = document.getElementById('feedback-bar');
-    fb.className = 'feedback-bar show wrong';
-
-    document.getElementById('feedback-icon').textContent = '⏰';
-    document.getElementById('feedback-text').textContent = `Waktu habis! Jawaban: ${q.opts[q.ans]}`;
-    document.getElementById('next-btn').className = 'next-btn show';
-}
-
-function nextQuestion() {
-    state.currentIdx++;
-    if (state.currentIdx < state.questions.length) {
-        loadQuestion();
-    } else {
-        showResult();
-    }
-}
-
 function handleAnswer(displayPos, clickedBtn) {
     if (state.answered) return;
     state.answered = true;
@@ -328,6 +304,86 @@ function handleAnswer(displayPos, clickedBtn) {
     document.getElementById('next-btn').className = 'next-btn show';
 }
 
+function handleTimeout() {
+    if(state.answered) return;
+    state.answered = true;
+
+    const q = state.questions[state.currentIdx];
+    state.timeTaken.push(TIMER_MAX);
+    state.answers.push({q: q.q, opts: q.opts, correct: q.ans, chosen: -1, isCorrect: false, points: 0});
+
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === state._correctMapped) b.classList.add('correct');
+    });
+
+    const fb = document.getElementById('feedback-bar');
+    fb.className = 'feedback-bar show wrong';
+
+    document.getElementById('feedback-icon').textContent = '⏰';
+    document.getElementById('feedback-text').textContent = `Waktu habis! Jawaban: ${q.opts[q.ans]}`;
+    document.getElementById('next-btn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+    state.currentIdx++;
+    if (state.currentIdx < state.questions.length) {
+        loadQuestion();
+    } else {
+        showResult();
+    }
+}
+
+// RESULT
+function showResult() {
+    const total = state.questions.length;
+    const correct = state.answers.filter(a => a.isCorrect).length;
+    const wrong = total - correct;
+    const avgTime = state.timeTaken.length
+        ? Math.round(state.timeTaken.reduce((a,b)=>a+b,0) / state.timeTaken.length)
+        : 0;
+
+    const pct = correct / total;
+    let emoji, title, subtitle;
+    if (pct === 1) { emoji = '🏆'; title = 'Sempurna!'; subtitle = 'Kamu menjawab semua pertanyaan dengan benar!'; }
+    else if (pct >= 0.8) { emoji = '🎉'; title = 'Luar Biasa!'; subtitle = 'Hampir sempurna, terus tingkatkan!'; }
+    else if (pct >= 0.6) { emoji = '👍'; title = 'Bagus!'; subtitle = 'Kamu lumayan, masih ada ruang untuk berkembang.'; }
+    else if (pct >= 0.4) { emoji = '🤔'; title = 'Cukup Baik'; subtitle = 'Perlu banyak belajar lagi nih!'; }
+    else { emoji = '📚'; title = 'Perlu Belajar Lagi'; subtitle = 'Jangan menyerah, coba lagi!'; }
+
+    document.getElementById('result-emoji').textContent = emoji;
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-subtitle').textContent = subtitle;
+    document.getElementById('final-score').textContent = state.score;
+    document.getElementById('stat-correct').textContent = correct;
+    document.getElementById('stat-wrong').textContent = wrong;
+    document.getElementById('stat-time').textContent = avgTime + 's';
+
+    showScreen('screen-result');
+}
+
+function renderReview() {
+    const list = document.getElementById('review-list');
+    list.innerHTML = state.answers.map((a, i) => {
+        const letters = ['A','B','C','D'];
+        const opts = a.opts.map((opt, idx) => {
+            let cls = 'neutral-ans';
+            let icon = '';
+            if (idx === a.correct) { cls = 'correct-ans'; icon = '✅'; }
+            else if (idx === a.chosen && !a.isCorrect) { cls = 'wrong-ans'; icon = '❌'; }
+            return `<div class="review-ans ${cls}"><span class="review-icon">${icon || '○'}</span>${letters[idx]}. ${opt}</div>`;
+        }).join('');
+        return `
+        <div class="review-item">
+            <div class="review-q">${i+1}. ${a.q}</div>
+            <div class="review-answers">${opts}</div>
+        </div>`;
+    }).join('');
+    showScreen('screen-review');
+}
+
+
 document.getElementById("start-btn").addEventListener("click", startQuiz);
 
 document.getElementById('next-btn').addEventListener('click', nextQuestion);
@@ -340,6 +396,21 @@ document.querySelectorAll(".diff-btn").forEach(btn => {
         state.category = null;
         renderHome();
     });
+});
+
+document.getElementById('save-score-btn').addEventListener('click', () => {
+    const name = document.getElementById('player-name').value.trim() || 'Anonim';
+    saveHighscore(name, state.score, QUESTIONS[state.category].name, state.difficulty);
+    document.getElementById('save-score-btn').textContent = '✅ Skor Disimpan!';
+    document.getElementById('save-score-btn').disabled = true;
+});
+
+document.getElementById('review-btn').addEventListener('click', renderReview);
+document.getElementById('back-to-result').addEventListener('click', () => showScreen('screen-result'));
+document.getElementById('home-btn').addEventListener('click', () => {
+    state.category = null;
+    showScreen('screen-home');
+    renderHome();
 });
 
 renderHome();
